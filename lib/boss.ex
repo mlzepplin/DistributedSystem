@@ -1,11 +1,16 @@
 defmodule Dos1.Boss do
-    def fireSupervisor(n,k) do
+   # use Application
+
+    def fireSupervisor(n_max,k) do
         {:ok, pid} = Task.Supervisor.start_link(strategy: :one_for_one)
-        result = Enum.to_list 1..n
-        |> Stream.map(&Task.Supervisor.async_nolink(pid,fn -> Dos1.isPerfectSquare(fn -> Dos1.sumOfSquares(&1,k) end) end))
-        |> Enum.map(&Task.await(&1)) 
-        |> Enum.filter(fn x->x != 0 end)
-       Enum.each(result, fn x->IO.inspect x end) 
+        numActors = 20 #Identify optimal no of actors
+        workUnitSize = div(n_max, numActors)
+        modList = Enum.to_list 1..n_max |> Enum.take_every(workUnitSize)
+    
+        result = modList
+        |> Enum.map(&Task.Supervisor.async_nolink(pid,fn -> Dos1.worker(&1,k,workUnitSize, n_max) end))
+        |> Enum.map(&Task.await(&1, 200000)) 
+        
        
     end
 end
