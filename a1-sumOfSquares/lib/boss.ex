@@ -3,8 +3,8 @@ defmodule Dos1.Boss do
 
     def fireSupervisor(n_max,k) do
         {:ok, pid} = Task.Supervisor.start_link(strategy: :one_for_one)
-        numActors = 20 #Identify optimal no of actors
-        workUnitSize = div(n_max, numActors)
+        numActors = 100 #Identify optimal no of actors
+        workUnitSize = div(n_max, numActors) + 1
         modList = Enum.to_list 1..n_max |> Enum.take_every(workUnitSize)
     
         result = modList
