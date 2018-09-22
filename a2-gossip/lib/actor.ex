@@ -6,12 +6,20 @@ defmodule Actor do
     GenServer.start_link(__MODULE__, default)
   end
 
+  def get_my_count()do
+    self = self()
+    count = GenServer.call(self,:get_my_count)
+  end
+
   def push_pid(pid, item) do
     GenServer.cast(pid, {:push, item})
   end
 
   def gossip(pid) do
-    GenServer.cast(pid, :gossip)
+    count = get_my_count()
+    if count<10 do
+      GenServer.cast(pid, :gossip)
+    end
   end
 
   # Server (callbacks)
@@ -25,6 +33,12 @@ defmodule Actor do
     {:reply, head, {count,tail}}
   end
 
+  #get my count
+  @impl true
+  def handle_call(:get_state, _from, {count,neighbors} ) do
+    {:reply,count, {count,neighbors}}
+  end
+
   @impl true
   def handle_cast(:gossip, {count,neighbors}) do
     if List.first(neighbors) != nil do
@@ -35,9 +49,7 @@ defmodule Actor do
       IO.inspect current
       IO.inspect forwardTo
       IO.inspect count + 1
-      if count<3 do
-        Actor.gossip(forwardTo)
-      end
+      Actor.gossip(forwardTo) 
     end
     {:noreply, {count+1,neighbors} }
   end
