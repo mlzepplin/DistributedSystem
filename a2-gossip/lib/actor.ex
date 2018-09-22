@@ -2,7 +2,7 @@ defmodule Actor do
   use GenServer
 
   # Client
-  def start_link(default) when is_list(default) do
+  def start_link(default) do
     GenServer.start_link(__MODULE__, default)
   end
 
@@ -16,28 +16,34 @@ defmodule Actor do
 
   # Server (callbacks)
   @impl true
-  def init(default_pid_list) do
-    {:ok, default_pid_list}
+  def init(default) do
+    {:ok, default}
   end
 
   @impl true
-  def handle_call(:pop, _from, [head | tail]) do
-    {:reply, head, tail}
+  def handle_call(:pop, _from, {count,[head | tail]}) do
+    {:reply, head, {count,tail}}
   end
 
   @impl true
-  def handle_cast(:gossip, neighbors) do
+  def handle_cast(:gossip, {count,neighbors}) do
     if List.first(neighbors) != nil do
       forwardTo = Enum.random(neighbors)
+      current = self()
+      # IO.inspect "from: " <> current
+      # IO.inspect "to: " <> forwardTo
+      IO.inspect current
       IO.inspect forwardTo
-      Actor.gossip(forwardTo)
+      IO.inspect count + 1
+      if count<3 do
+        Actor.gossip(forwardTo)
+      end
     end
-    {:noreply, neighbors}
+    {:noreply, {count+1,neighbors} }
   end
 
   @impl true
-  def handle_cast({:push, item}, state) do
-    {:noreply, [item | state]}
-    
-end
+  def handle_cast({:push, item}, {count,neighbors}) do
+    {:noreply, {count,[item | neighbors]} }
+  end
 end
