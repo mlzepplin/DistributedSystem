@@ -1,18 +1,20 @@
 defmodule A2 do
-  @moduledoc """
-  Documentation for A2.
-  """
 
-  @doc """
-  Hello world.
+  def gossip do
+    
+    {:ok, pid1} = Actor.start_link([])
+    {:ok, pid2} = Actor.start_link([])
+    {:ok, pid3} = Actor.start_link([])
+    {:ok, pid4} = Actor.start_link([])
 
-  ## Examples
+    Actor.push_pid(pid1,pid2)
+    Actor.push_pid(pid2,pid3)
+    Actor.push_pid(pid3,pid4)
 
-      iex> A2.hello()
-      :world
+    top = Actor.gossip(pid1)
+    IO.inspect top
 
-  """
-  def hello do
-    :world
+
+
   end
 end
