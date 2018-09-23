@@ -10,7 +10,7 @@ defmodule GossipActor do
     count = GenServer.call(pid,:get_count)
   end
 
-  def push_pid(pid, item) do
+  def add_peer(pid, item) do
     GenServer.cast(pid, {:push, item})
   end
 

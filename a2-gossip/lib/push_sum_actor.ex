@@ -14,8 +14,8 @@ defmodule PushSumActor do
       GenServer.cast(pid, {:push, item})
     end
   
-    def gossip(pid) do
-        GenServer.cast(pid, :gossip)
+    def pushsum(pid) do
+        GenServer.cast(pid, :pushsum)
     end
   
     # Server (callbacks)
