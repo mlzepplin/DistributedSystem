@@ -1,7 +1,7 @@
 defmodule PushSumActor do
     use GenServer
   
-    # Client
+    # Client Side
     def start_link(default) do
       GenServer.start_link(__MODULE__, default)
     end
@@ -15,42 +15,57 @@ defmodule PushSumActor do
     end
   
     def gossip(pid) do
-        GenServer.cast(pid, :gossip)
+      GenServer.cast(pid, :gossip)
     end
   
-    # Server (callbacks)
-    @impl true
+    def inform_main_of_hibernation(pid) do
+      Genserver.cast(pid, :hibernate)
+    end
+  
+    # Server Side (callbacks)
     def init(default) do
       {:ok, default}
     end
   
-    @impl true
-    def handle_call(:pop, _from, {count,[head | tail]}) do
-      {:reply, head, {count,tail}}
+    #################### Handle_Calls #####################
+    
+    # pop
+    def handle_call(:pop, _from, {count,main_pid,start_time,[head | tail]}) do
+      {:reply, head, start_time,{count,tail}}
     end
   
-    #get my count
-    @impl true
-    def handle_call(:get_count, _from, {count,neighbors} ) do
-      {:reply,count, {count,neighbors}}
+    # get_count
+    def handle_call(:get_count, _from, {count,main_pid,start_time,neighbors} ) do
+      {:reply,count, start_time,{count,neighbors}}
     end
   
-    @impl true
-    def handle_cast(:gossip, {count,neighbors}) do
+    #################### Handle_Casts #####################
+    
+    # Gossip
+    def handle_cast(:gossip, {count,main_pid,start_time,neighbors}) do
       current = self()
-      if (List.first(neighbors) != nil) && count<10 do 
-        forwardTo = Enum.random(neighbors)
-        IO.inspect current
-        IO.inspect forwardTo
-        IO.inspect count + 1
-        PushSumActor.gossip(forwardTo) 
+      updatedState = 
+      case count >= 10 do 
+        true -> 
+          inform_main_of_hibernation(main_pid)
+          timeToHibernation = System.monotonic_time(:millisecond) - start_time
+          IO.inspect "hibernation time : #{ timeToHibernation}"
+          {:noreply, {count,main_pid,start_time,neighbors}}
+          #TODO - decide, to kill the node or not
+        false ->
+          forwardTo = Enum.random(neighbors)
+          IO.inspect current
+          IO.inspect forwardTo
+          IO.inspect count + 1
+          GossipActor.gossip(forwardTo) 
+          {:noreply, {count+1,main_pid,start_time,neighbors} }
       end
-      {:noreply, {count+1,neighbors} }
+      
     end
   
-    @impl true
-    def handle_cast({:push, item}, {count,neighbors}) do
-      {:noreply, {count,[item | neighbors]} }
+    # push
+    def handle_cast({:push, item}, {count,main_pid,start_time,neighbors}) do
+      {:noreply, {count,main_pid,start_time,[item | neighbors]} }
     end
+  
   end
-  
