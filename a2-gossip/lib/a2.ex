@@ -1,36 +1,52 @@
 defmodule A2 do
 
-  def push(l,item) do
-    [item|l]
-  end
-
-  def gossip do
-    
-    n=4
+  def gossip(numNodes, topology) do
   
-    {ok_atoms, pidList} = Enum.map(Enum.to_list(1..n),fn(x) -> (Actor.start_link({0,[]}))end) |> Enum.unzip 
-    IO.inspect pidList
-
-   
-    # Actor.push_pid(pidList[0],pidList[1])
-
-    # Actor.push_pid(pidList[1],pidList[2])
-    # Actor.push_pid(pidList[1],pidList[0])
-
-    # Actor.push_pid(pidList[2],pidList[3])
-    # Actor.push_pid(pidList[2],pidList[1])
-
-    # Actor.push_pid(pidList[3],pidList[2])
-    # top = Actor.gossip(pidList[0])
-    # IO.inspect top
-
-    # for x <- 1..20 do
-    #   modList = Enum.to_list 1..n_max |> Enum.take_every(workUnitSize)
+    numMeetings = 10000
+  
+    #spawn actors
+    {ok_atoms, pidList} = Enum.map(Enum.to_list(1..numNodes),fn(x) -> (GossipActor.start_link({0,[]}))end) |> Enum.unzip
     
-    #     result = modList
-    #     |> Enum.map(&Task.Supervisor.async_nolink(pid,fn -> Dos1.worker(&1,k,workUnitSize, n_max) end))
-    # end    
+    # PLACE TO SETUP THE TOPOLOGY
+    # call will be like.. A2.buildTopology(pidList,topology)
+    GossipActor.push_pid(Enum.at(pidList,0),Enum.at(pidList,1))
 
+    GossipActor.push_pid(Enum.at(pidList,1),Enum.at(pidList,2))
+    GossipActor.push_pid(Enum.at(pidList,1),Enum.at(pidList,0))
 
+    GossipActor.push_pid(Enum.at(pidList,2),Enum.at(pidList,3))
+    GossipActor.push_pid(Enum.at(pidList,2),Enum.at(pidList,1))
+
+    GossipActor.push_pid(Enum.at(pidList,3),Enum.at(pidList,2))
+    top = GossipActor.gossip(Enum.at(pidList,0))
+    IO.inspect top
+
+    #keep meetings happening
+    for x <- 1..numMeetings do
+      for pidIndex <- 1..numNodes do
+          GossipActor.gossip(Enum.at(pidList,pidIndex))
+      end
+    end
+  
   end
+
+
+  def pushSum(numNodes, topology) do
+    numMeetings = 10000
+    #spawn
+    {ok_atoms, pidList} = Enum.map(Enum.to_list(1..numNodes),fn(x) -> (PushSumActor.start_link({0,[]}))end) |> Enum.unzip
+    
+    #TODO
+    #setup topology
+    #A2.buildTopology(numNodes,topology)
+
+    #keep meetings happening
+    for x <- 1..numMeetings do
+      for pidIndex <- 1..numNodes do
+          PushSumActor.gossip(Enum.at(pidList,pidIndex))
+      end
+    end
+  end
+
+
 end
