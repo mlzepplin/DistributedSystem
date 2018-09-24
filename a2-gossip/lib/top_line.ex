@@ -1,13 +1,13 @@
 defmodule Line do
 
     def spawn_actors(num_nodes, main_pid) do
-    IO.puts "spawn"
+    
       {ok, actors} = Enum.map(Enum.to_list(1..num_nodes),fn(x) -> (GossipActor.start_link({0,main_pid,System.monotonic_time(:millisecond),[]})) end) |> Enum.unzip
       actors
     end
 
-    def set_peers(:line, actors, imperfect \\ false) do
-    IO.puts "set peers"
+    def set_peers(actors, imperfect \\ false) do
+    
         first = List.first(actors)
         last = List.last(actors)
         size = length(actors) 

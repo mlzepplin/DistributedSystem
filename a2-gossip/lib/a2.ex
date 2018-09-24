@@ -1,5 +1,5 @@
 defmodule A2 do
-    use GenServer
+  use GenServer
 
   def setNeighbors(pid,pidList) do
     for x <- 0..Enum.count(pidList)-1 do
@@ -8,22 +8,26 @@ defmodule A2 do
   end
 
   def buildTopology(topology, num_nodes) do
-  
-      case topology do
-          line    -> 
-            actors = Line.spawn_actors(num_nodes, self())
-            Line.set_peers(:line, actors)
+    main_pid = self()
+    case topology do
+        "line"    -> 
+            actors = Line.spawn_actors(num_nodes, main_pid )
+            Line.set_peers(actors)
             actors
           
-          impline -> 
-            actors = Line.spawn_actors(num_nodes, self())
-            Line.set_peers(:line, actors, true)
+        "impline" -> 
+            actors = Line.spawn_actors(num_nodes, main_pid)
+            Line.set_peers(actors, true)
          
-          grid    -> 
-            actors = Grid.spawn_actors(num_nodes)
-            Grid.set_peers(:grid, actors)
+        "grid"    -> 
+            actors = Grid.spawn_actors(num_nodes, main_pid)
+            Grid.set_peers(actors)
 
-          _    -> IO.puts("not yet implemented")
+        "full"    ->
+            actors = Full.spawn_actors(num_nodes, main_pid)
+            Full.set_peers(actors)
+
+        _  -> IO.puts("not yet implemented")
       end
   end 
 
