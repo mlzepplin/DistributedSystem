@@ -93,6 +93,7 @@ defmodule A2 do
 
   # hibernate
   def handle_cast(:hibernate, {numHibernated,neighbors}) do
+      IO.inspect "#{numHibernated} ==> hibernated uptill now"
       if (numHibernated + 1 == Enum.count(neighbors)) do 
         IO.inspect "all Hibernated !!!"
       end
@@ -102,7 +103,6 @@ defmodule A2 do
   # gossip
   def handle_cast(:gossip, {numHibernated,neighbors}) do
     #choose neighbor at random and start gossiping
-    IO.inspect "before gossiping"
     forwardTo = Enum.random(neighbors)
     GossipActor.gossip(forwardTo)
     {:noreply, {numHibernated,neighbors} }
