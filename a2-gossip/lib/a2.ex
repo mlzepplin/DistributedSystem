@@ -1,9 +1,9 @@
 defmodule A2 do
     use GenServer
 
-  def set_neighbors(pidList) do
-    for x <- 0..Enum.count(pidList) do
-      A2.push_pid(Enum.at(pidList,x))
+  def setNeighbors(pid,pidList) do
+    for x <- 0..Enum.count(pidList)-1 do
+      A2.add_peer(pid,Enum.at(pidList,x))
     end
   end
 
@@ -27,34 +27,23 @@ defmodule A2 do
       end
   end 
 
-  def gossip(num_nodes, topology) do
-  
-    numMeetings = 10000
-    
+  def start_up(num_nodes, topology) do
+    #build topology
     actors = buildTopology(topology, num_nodes)
-    
-    #keep meetings happening
-    for x <- 1..numMeetings do
-      for pidIndex <- 1..num_nodes do
-          GossipActor.gossip(Enum.at(actors,pidIndex))
-      end
-    end
-  
+    #spin up the main actor
+    {status,mainActor} = A2.start_link({0,[]})
+    #put all other actors in its mailbox 
+    setNeighbors(mainActor,actors)
+    mainActor
+  end
+
+  def gossip(pid) do    
+    GenServer.cast(pid, :gossip)
   end
 
 
-  def pushSum(num_nodes, topology) do
-    numMeetings = 10000
-   
-    
-    actors = buildTopology(num_nodes, topology)
-    
-    #keep meetings happening
-    for x <- 1..numMeetings do
-      for pidIndex <- 1..num_nodes do
-          PushSumActor.pushsum(Enum.at(actors,pidIndex))
-      end
-    end
+  def pushSum(pid) do
+    A2.cast(pid,:push_sum)
   end 
 
 
@@ -68,8 +57,8 @@ defmodule A2 do
     numHibernated = GenServer.call(pid,:get_numHibernated)
   end
 
-  def push_pid(pid, item) do
-      Genserver.cast(pid, {:push, item})
+  def add_peer(pid, item) do
+      GenServer.cast(pid, {:push, item})
   end
 
  
@@ -104,12 +93,27 @@ defmodule A2 do
 
   # hibernate
   def handle_cast(:hibernate, {numHibernated,neighbors}) do
-      current = self()
       if (numHibernated + 1 == Enum.count(neighbors)) do 
         IO.inspect "all Hibernated !!!"
       end
       {:noreply, {numHibernated+1,neighbors} }
   end      
 
+  # gossip
+  def handle_cast(:gossip, {numHibernated,neighbors}) do
+    #choose neighbor at random and start gossiping
+    IO.inspect "before gossiping"
+    forwardTo = Enum.random(neighbors)
+    GossipActor.gossip(forwardTo)
+    {:noreply, {numHibernated,neighbors} }
+  end
+
+  # push sum
+  def handle_cast(:push_sum, {numHibernated,neighbors}) do
+    #choose neighbor at random and start gossiping
+    forwardTo = Enum.random(neighbors)
+    PushSumActor.pushSum(forwardTo)
+    {:noreply, {numHibernated,neighbors} }
+  end
 
 end

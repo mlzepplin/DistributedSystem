@@ -1,6 +1,6 @@
 defmodule Line do
 
-    def spawn_actors(num_nodes) do
+    def spawn_actors(num_nodes, main_pid) do
     IO.puts "spawn"
       {ok, actors} = Enum.map(Enum.to_list(1..num_nodes),fn(x) -> (GossipActor.start_link({0,main_pid,System.monotonic_time(:millisecond),[]})) end) |> Enum.unzip
       actors

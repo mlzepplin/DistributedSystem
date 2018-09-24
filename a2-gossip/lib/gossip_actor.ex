@@ -19,7 +19,7 @@ defmodule GossipActor do
   end
 
   def inform_main_of_hibernation(pid) do
-    Genserver.cast(pid, :hibernate)
+    GenServer.cast(pid, :hibernate)
   end
 
   # Server Side (callbacks)
@@ -44,12 +44,13 @@ defmodule GossipActor do
   # Gossip
   def handle_cast(:gossip, {count,main_pid,start_time,neighbors}) do
     current = self()
+    IO.inspect "gossip handle cast"
     updatedState = 
     case count >= 10 do 
       true -> 
         inform_main_of_hibernation(main_pid)
         timeToHibernation = System.monotonic_time(:millisecond) - start_time
-        IO.inspect "hibernation time : #{ timeToHibernation}"
+        IO.inspect "time to hibernation : #{ timeToHibernation}"
         {:noreply, {count,main_pid,start_time,neighbors}}
         #TODO - decide, to kill the node or not
       false ->

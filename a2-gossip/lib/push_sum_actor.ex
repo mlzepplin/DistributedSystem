@@ -10,16 +10,16 @@ defmodule PushSumActor do
       count = GenServer.call(pid,:get_count)
     end
   
-    def push_pid(pid, item) do
+    def add_peer(pid, item) do
       GenServer.cast(pid, {:push, item})
     end
   
-    def pushsum(pid) do
+    def pushSum(pid) do
         GenServer.cast(pid, :pushsum)
     end
   
     def inform_main_of_hibernation(pid) do
-      Genserver.cast(pid, :hibernate)
+      GenServer.cast(pid, :hibernate)
     end
   
     # Server Side (callbacks)
