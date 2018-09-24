@@ -7,8 +7,20 @@ defmodule A2 do
     end
   end
 
+  def do_work(pid) do
+      A2.gossipStep(pid)
+      do_work(pid)
+  end
+
+  def gossipStep(pid) do
+      GenServer.cast(pid,:gossip_step)
+  end
+
+  def pushSumStep(pid) do
+      GenServer.cast(pid,:push_sum_step)
+  end
+
   def buildTopology(topology, num_nodes) do
-  
       case topology do
           line    -> 
             actors = Line.spawn_actors(num_nodes, self())
@@ -41,9 +53,8 @@ defmodule A2 do
     GenServer.cast(pid, :gossip)
   end
 
-
   def pushSum(pid) do
-    A2.cast(pid,:push_sum)
+    GenServer.cast(pid,:push_sum)
   end 
 
 
@@ -93,7 +104,7 @@ defmodule A2 do
 
   # hibernate
   def handle_cast(:hibernate, {numHibernated,neighbors}) do
-      IO.inspect "#{numHibernated} ==> hibernated uptill now"
+      IO.inspect "hibernated!!"
       if (numHibernated + 1 == Enum.count(neighbors)) do 
         IO.inspect "all Hibernated !!!"
       end
@@ -115,5 +126,23 @@ defmodule A2 do
     PushSumActor.pushSum(forwardTo)
     {:noreply, {numHibernated,neighbors} }
   end
+
+  # step gossip
+  def handle_cast(:gossip_step, {numHibernated,neighbors}) do 
+    for x <-0..Enum.count(neighbors)-1 do
+        GenServer.cast(Enum.at(neighbors,x),:step)
+    end
+    {:noreply, {numHibernated,neighbors} }
+  end
+
+  # step push sum
+  def handle_cast(:push_sum_step, {numHibernated,neighbors}) do 
+    for x <-0..Enum.count(neighbors)-1 do
+        GenServer.cast(Enum.at(neighbors,x),:step)
+    end
+    {:noreply, {numHibernated,neighbors} }
+  end
+
+
 
 end

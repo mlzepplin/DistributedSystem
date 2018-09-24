@@ -6,6 +6,7 @@ mainPid = A2.start_up(numNodes, topology)
 if algorithm == "gossip" do
     f = A2.gossip(mainPid)
     IO.inspect f
+    A2.do_work(mainPid)
 else
     A2.pushSum(mainPid)
 end
