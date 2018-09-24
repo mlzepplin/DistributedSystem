@@ -1,6 +1,5 @@
 defmodule A2 do
-
-  use GenServer
+    use GenServer
 
   def set_neighbors(pidList) do
     for x <- 0..Enum.count(pidList) do
@@ -8,16 +7,16 @@ defmodule A2 do
     end
   end
 
-  def gossip(numNodes, topology) do
   def buildTopology(topology, num_nodes) do
+  
       case topology do
           line    -> 
-            actors = Line.spawn_actors(num_nodes)
+            actors = Line.spawn_actors(num_nodes, self())
             Line.set_peers(:line, actors)
             actors
           
           impline -> 
-            actors = Line.spawn_actors(num_nodes)
+            actors = Line.spawn_actors(num_nodes, self())
             Line.set_peers(:line, actors, true)
          
           grid    -> 
@@ -33,15 +32,13 @@ defmodule A2 do
     numMeetings = 10000
     
     actors = buildTopology(topology, num_nodes)
-
-    GossipActor.gossip(Enum.at(pidList,0))
-
+    
     #keep meetings happening
-    # for x <- 1..numMeetings do
-    #   for pidIndex <- 1..numNodes do
-    #       GossipActor.gossip(Enum.at(pidList,pidIndex))
-    #   end
-    # end
+    for x <- 1..numMeetings do
+      for pidIndex <- 1..num_nodes do
+          GossipActor.gossip(Enum.at(actors,pidIndex))
+      end
+    end
   
   end
 
@@ -58,7 +55,9 @@ defmodule A2 do
           PushSumActor.pushsum(Enum.at(actors,pidIndex))
       end
     end
-  end       
+  end 
+
+
 
   # Client Side
   def start_link(default) do
@@ -110,8 +109,7 @@ defmodule A2 do
         IO.inspect "all Hibernated !!!"
       end
       {:noreply, {numHibernated+1,neighbors} }
-  end
-
+  end      
 
 
 end
