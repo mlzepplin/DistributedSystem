@@ -68,4 +68,12 @@ defmodule PushSumActor do
       {:noreply, {count,main_pid,start_time,[item | neighbors]} }
     end
   
+    # step
+    def handle_cast(:step, {count,main_pid,start_time,neighbors}) do 
+        if count >= 1 do
+        self = self()
+        PushSumActor.pushSum(self)
+        end
+    end
+
   end

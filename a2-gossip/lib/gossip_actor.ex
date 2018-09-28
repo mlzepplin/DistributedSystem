@@ -25,7 +25,7 @@ defmodule GossipActor do
   end
 
   def inform_main_of_hibernation(pid) do
-    A2.cast(pid, :hibernate)
+    GenServer.cast(pid,:hibernate)
   end
 
   # Server Side (callbacks)
@@ -50,21 +50,25 @@ defmodule GossipActor do
   # Gossip
   def handle_cast(:gossip, {count,main_pid,start_time,neighbors}) do
     current = self()
+    limit = 5
     updatedState = 
-    case count + 1 >= 5 do 
+    case count < limit do 
       true -> 
-        inform_main_of_hibernation(main_pid)
-        timeToHibernation = System.monotonic_time(:millisecond) - start_time
-        IO.inspect "time to hibernation : #{ timeToHibernation}"
-        {:noreply, {count,main_pid,start_time,neighbors}}
-        #TODO - decide, to kill the node or not
-      false ->
         forwardTo = Enum.random(neighbors)
         IO.inspect current
         IO.inspect forwardTo
         IO.inspect count + 1
-        GossipActor.gossip(forwardTo) 
+        GossipActor.gossip(forwardTo)
+        if (count+1) == limit do
+          IO.inspect "limit reached"
+          inform_main_of_hibernation(main_pid)
+          timeToHibernation = System.monotonic_time(:millisecond) - start_time
+          IO.inspect "time to hibernation : #{ timeToHibernation}"
+          #TODO - decide, to kill the node or not?
+        end
         {:noreply, {count+1,main_pid,start_time,neighbors} }
+      false ->  
+        {:noreply, {count,main_pid,start_time,neighbors}}
     end
     
   end
@@ -74,6 +78,17 @@ defmodule GossipActor do
     {:noreply, {count,main_pid,start_time,[item | neighbors]} }
   end
 
+
  
+
+  # step
+  def handle_cast(:step, {count,main_pid,start_time,neighbors}) do 
+    if count >= 1 do
+      self = self()
+      GossipActor.gossip(self)
+    end
+    {:noreply, {count,main_pid,start_time,neighbors}}
+  end
+
 
 end
