@@ -7,7 +7,7 @@ defmodule A2 do
     end
   end
 
-  def buildTopology(topology, num_nodes) do
+  def buildTopology(topology, num_nodes, algorithm) do
     main_pid = self()
     case topology do
         "line"    -> 
@@ -16,12 +16,17 @@ defmodule A2 do
             actors
           
         "impline" -> 
-            actors = Line.spawn_actors(num_nodes, main_pid)
-            Line.set_peers(actors, true)
+            actors_map = Line.spawn_actors(num_nodes, main_pid)
+            Line.set_peers(actors_map, true)
          
         "grid"    -> 
-            actors = Grid.spawn_actors(num_nodes, main_pid)
+            actors = Grid.spawn_actors(num_nodes, main_pid, algorithm)
             Grid.set_peers(actors)
+            IO.puts "peers set"
+
+        "3D"      ->
+            actors = ThreeDimGrid.spawn_actors(num_nodes, main_pid)
+            ThreeDimGrid.set_peers(actors)
 
         "full"    ->
             actors = Full.spawn_actors(num_nodes, main_pid)
@@ -31,9 +36,9 @@ defmodule A2 do
       end
   end 
 
-  def start_up(num_nodes, topology) do
+  def start_up(num_nodes, topology, algorithm) do
     #build topology
-    actors = buildTopology(topology, num_nodes)
+    actors = buildTopology(topology, num_nodes, algorithm)
     #spin up the main actor
     {status,mainActor} = A2.start_link({0,[]})
     #put all other actors in its mailbox 
