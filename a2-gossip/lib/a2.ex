@@ -30,21 +30,30 @@ defmodule A2 do
       actors
           
     "impline" -> 
-      actors_map = Line.spawn_actors(num_nodes, main_pid, algorithm)
-      Line.set_peers(actors_map, algorithm, true)
+      actors = Line.spawn_actors(num_nodes, main_pid, algorithm)
+      Line.set_peers(actors, algorithm, true)
+      actors
          
     "full"    ->
       actors = Full.spawn_actors(num_nodes, main_pid, algorithm)
       Full.set_peers(actors, algorithm)
+      actors
 
     "grid"    -> 
-      actors = Grid.spawn_actors(num_nodes, main_pid, algorithm)
-      Grid.set_peers(actors, algorithm)
-      IO.puts "peers set"
+      actors_map = Grid.spawn_actors(num_nodes, main_pid, algorithm)
+      Grid.set_peers(num_nodes, actors_map, algorithm)
+      actors = get_list_of_actors_2d(actors_map)
+
+    #Torus. Similar to a 2D grid, joined at the edges
+    "sphere"  ->
+      actors_map = Torus.spawn_actors(num_nodes, main_pid, algorithm)
+      Torus.set_peers(num_nodes, actors_map, algorithm)
+      actors = get_list_of_actors_2d(actors_map)
 
     "3D"      ->
-      actors = ThreeDimGrid.spawn_actors(num_nodes, main_pid, algorithm)
-      ThreeDimGrid.set_peers(actors, algorithm)
+      actors_map = ThreeDimGrid.spawn_actors(num_nodes, main_pid, algorithm)
+      ThreeDimGrid.set_peers(actors_map, algorithm)
+      actors = get_list_of_actors_3d(actors_map)
 
         
 
@@ -52,12 +61,31 @@ defmodule A2 do
       end
   end 
 
+  def get_list_of_actors_2d(actors_map) do
+ 
+    actors_list = Enum.reduce(Map.values(actors_map), [], fn(x, acc) -> (
+      acc ++ Map.values(x) 
+      )end
+    )
+  end
+
+  def get_list_of_actors_3d(actors_map) do
+
+    map_3d_values = Map.values(actors_map)
+    actors_list = Enum.reduce(map_3d_values, [], fn(map_2d, acc) -> (
+     acc ++ get_list_of_actors_2d(map_2d) 
+    )end)
+
+  end
+
   def start_up(num_nodes, topology, algorithm) do
     #build topology
     actors = buildTopology(topology, num_nodes, algorithm)
     IO.inspect actors
+
     #spin up the main actor
     {status,mainActor} = A2.start_link({0,[]})
+    
     #put all other actors in its mailbox 
     setNeighbors(mainActor,actors)
     mainActor

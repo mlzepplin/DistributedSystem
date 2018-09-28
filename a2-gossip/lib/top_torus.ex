@@ -1,17 +1,16 @@
-defmodule Grid do
+defmodule Torus do
     def spawn_actors(num_nodes, main_pid, algorithm) do
         grid_rows = round(:math.ceil(:math.sqrt(num_nodes)))
         range = 1..grid_rows
 
-        actors_map = Enum.reduce(range, %{}, fn(y,acc_out) -> (
+         actors_map = Enum.reduce(range, %{}, fn(y,acc_out) -> (
             row_map = Enum.reduce(range, %{}, fn(x,acc_in) -> (
                 case algorithm do
                     "gossip" ->
                         {:ok, pid} = create_gossip_worker(main_pid)
                         Map.put(acc_in, x, pid)
                     "pushsum" ->
-                        #Explore other values of s that can be passed as start value
-                         {:ok,pid} = create_pushsum_worker(main_pid, (y-1)*grid_rows + x)       
+                        {:ok,pid} = create_pushsum_worker(main_pid, (y-1)*grid_rows + x) 
                         Map.put(acc_in, x, pid)
                 end
             ) end)
@@ -20,13 +19,9 @@ defmodule Grid do
             end
             
         )
-        # IO.puts "Actors map : "
-        # IO.inspect actors_map
-        actors_map
-    
     end
 
-    #state holds count, main_pid, start_time, neighbors_list
+    #state holds count, main_pid, start_time, neighors
     def create_gossip_worker(main_pid) do
         GossipActor.start_link({0,main_pid,System.monotonic_time(:millisecond),[]})
     end
@@ -35,8 +30,8 @@ defmodule Grid do
     def create_pushsum_worker(main_pid, s) do
         PushSumActor.start_link({s,1,false,s,0,main_pid,System.monotonic_time(:millisecond),[]})
     end
-    
-    def set_peers(num_nodes, actors_map, algorithm, imperfect \\ false) do
+
+    def set_peers(num_nodes, actors_map, algorithm) do
         n = round(:math.ceil(:math.sqrt(num_nodes)))
 
         Enum.each(actors_map, fn({r,row_map}) -> (
@@ -45,11 +40,10 @@ defmodule Grid do
                     r == 1 ->
                         cond do
                             c==1 ->
-                                [actors_map[r][c+1]] ++ [actors_map[r+1][c]] 
+                                [actors_map[r][c+1]] ++ [actors_map[r+1][c]] ++ [actors_map[1][n]] ++ [actors_map[n][1]]
                             c==n ->
-                                [actors_map[r+1][c]] ++ [actors_map[r][c-1]] 
+                                [actors_map[r+1][c]] ++ [actors_map[r][c-1]] ++ [actors_map[1][1]] ++ [actors_map[n][n]]
                             c>1 && c<n ->
-                                #Add logic for neighbors within 0.1 X
                                 [actors_map[r][c-1]] ++ [actors_map[r][c+1]] ++ [actors_map[r+1][c]] ++ [actors_map[n][c]]
 
                         end
@@ -57,22 +51,20 @@ defmodule Grid do
                     r == n ->
                         cond do
                             c==1 ->
-                                [actors_map[r-1][c]] ++ [actors_map[r][c+1]] 
+                                [actors_map[r-1][c]] ++ [actors_map[r][c+1]] ++ [actors_map[1][1]] ++ [actors_map[n][n]]
                             c==n ->
-                                [actors_map[r-1][c]] ++ [actors_map[r][c-1]]
+                                [actors_map[r-1][c]] ++ [actors_map[r][c-1]] ++ [actors_map[n][1]] ++ [actors_map[1][n]]
                             c>1 && c<n ->
-                            #Add logic for neighbors within 0.1 X
                                 [actors_map[r][c-1]] ++ [actors_map[r][c+1]] ++ [actors_map[r-1][c]] ++ [actors_map[1][c]]
                         end
 
                     r>1 && r<n ->
                         cond do 
                             c==1 ->
-                                [actors_map[r-1][c]] ++ [actors_map[r+1][c]] ++ [actors_map[r][c+1]] 
+                                [actors_map[r-1][c]] ++ [actors_map[r+1][c]] ++ [actors_map[r][c+1]] ++ [actors_map[r][n]]
                             c==n ->
-                                [actors_map[r-1][c]] ++ [actors_map[r][c-1]] ++ [actors_map[r+1][c]] 
+                                [actors_map[r-1][c]] ++ [actors_map[r][c-1]] ++ [actors_map[r+1][c]] ++ [actors_map[r][1]]
                             c>1 && c<n ->
-                            #Add logic for neighbors within 0.1 X
                                 [actors_map[r-1][c]] ++ [actors_map[r+1][c]] ++ [actors_map[r][c-1]] ++ [actors_map[r][c+1]]
                         end
 
@@ -91,6 +83,12 @@ defmodule Grid do
         )end)
 
     end
-    
-    
+
+
+
+
+
+
+
+
 end
