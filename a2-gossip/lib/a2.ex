@@ -24,27 +24,29 @@ defmodule A2 do
   def buildTopology(topology, num_nodes, algorithm) do
     main_pid = self()
     case topology do
-        "line"    -> 
-            actors = Line.spawn_actors(num_nodes, main_pid )
-            Line.set_peers(actors)
-            actors
+    "line"    -> 
+      actors = Line.spawn_actors(num_nodes, main_pid, algorithm)
+      Line.set_peers(actors, algorithm)
+      actors
           
-        "impline" -> 
-            actors_map = Line.spawn_actors(num_nodes, main_pid)
-            Line.set_peers(actors_map, true)
+    "impline" -> 
+      actors_map = Line.spawn_actors(num_nodes, main_pid, algorithm)
+      Line.set_peers(actors_map, algorithm, true)
          
-        "grid"    -> 
-            actors = Grid.spawn_actors(num_nodes, main_pid, algorithm)
-            Grid.set_peers(actors)
-            IO.puts "peers set"
+    "full"    ->
+      actors = Full.spawn_actors(num_nodes, main_pid, algorithm)
+      Full.set_peers(actors, algorithm)
 
-        "3D"      ->
-            actors = ThreeDimGrid.spawn_actors(num_nodes, main_pid)
-            ThreeDimGrid.set_peers(actors)
+    "grid"    -> 
+      actors = Grid.spawn_actors(num_nodes, main_pid, algorithm)
+      Grid.set_peers(actors, algorithm)
+      IO.puts "peers set"
 
-        "full"    ->
-            actors = Full.spawn_actors(num_nodes, main_pid)
-            Full.set_peers(actors)
+    "3D"      ->
+      actors = ThreeDimGrid.spawn_actors(num_nodes, main_pid, algorithm)
+      ThreeDimGrid.set_peers(actors, algorithm)
+
+        
 
         _  -> IO.puts("not yet implemented")
       end
