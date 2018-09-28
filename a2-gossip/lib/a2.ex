@@ -55,6 +55,7 @@ defmodule A2 do
   def start_up(num_nodes, topology, algorithm) do
     #build topology
     actors = buildTopology(topology, num_nodes, algorithm)
+    IO.inspect actors
     #spin up the main actor
     {status,mainActor} = A2.start_link({0,[]})
     #put all other actors in its mailbox 
@@ -66,10 +67,10 @@ defmodule A2 do
     GenServer.cast(pid, :gossip)
   end
 
-  def pushSum(pid) do
-    GenServer.cast(pid,:push_sum)
-  end 
-
+  def push_sum(pid) do
+    GenServer.cast(pid, :push_sum)
+  end
+  
 
 
   # Client Side
@@ -85,10 +86,7 @@ defmodule A2 do
       GenServer.cast(pid, {:push, item})
   end
 
- 
-  def push_sum(pid) do
-      GenServer.cast(pid, :push_sum)
-  end
+
 
   # Server Side (callbacks)
   def init(default) do
@@ -136,7 +134,7 @@ defmodule A2 do
   def handle_cast(:push_sum, {numHibernated,neighbors}) do
     #choose neighbor at random and start gossiping
     forwardTo = Enum.random(neighbors)
-    PushSumActor.pushSum(forwardTo)
+    PushSumActor.push_sum(forwardTo,{0,0})
     {:noreply, {numHibernated,neighbors} }
   end
 

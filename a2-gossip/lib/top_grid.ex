@@ -10,7 +10,7 @@ defmodule Grid do
                         {:ok, pid} = create_gossip_worker(main_pid)
                         Map.put(acc_in, x, pid)
                     "pushsum" ->
-                        {:ok,pid} = create_pushsum_worker(main_pid)
+                        {:ok,pid} = create_pushsum_worker(main_pid, x*grid_rows + y)
                         Map.put(acc_in, x, pid)
                 end
             ) end)
@@ -29,8 +29,8 @@ defmodule Grid do
         GossipActor.start_link({0,main_pid,System.monotonic_time(:millisecond),[]})
     end
 
-    def create_pushsum_worker(main_pid) do
-        GossipActor.start_link({0,main_pid,System.monotonic_time(:millisecond),[]})
+    def create_pushsum_worker(main_pid, s) do
+        PushSumActor.start_link({s,1,false,s,0,main_pid,System.monotonic_time(:millisecond),[]})
     end
     
     def set_peers(actors, imperfect \\ false) do

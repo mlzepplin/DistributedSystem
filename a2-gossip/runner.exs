@@ -18,7 +18,8 @@ case algorithm  do
        IO.inspect f
        A2.do_work(main_pid)
    "pushsum" ->
-        A2.pushSum(main_pid)
+        
+        A2.push_sum(main_pid)
       _        -> 
         IO.puts "Invalid input. Enter gossip or pushsum"
 end

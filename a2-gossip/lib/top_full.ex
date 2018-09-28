@@ -18,7 +18,7 @@ defmodule Full do
 
     #state holds initial s,w values, s/w ratio differences, main_pid, strt_time,neighbors_list
     def create_pushsum_worker(main_pid, s) do
-        PushSumActor.start_link({s,1,[],main_pid,System.monotonic_time(:millisecond),[]})
+        PushSumActor.start_link({s,1,false,s,0,main_pid,System.monotonic_time(:millisecond),[]})
     end
 
     def set_peers(actors, algorithm) do
