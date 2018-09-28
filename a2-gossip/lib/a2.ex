@@ -1,12 +1,12 @@
 defmodule A2 do
-    use GenServer
+  use GenServer
 
   def setNeighbors(pid,pidList) do
     for x <- 0..Enum.count(pidList)-1 do
       A2.add_peer(pid,Enum.at(pidList,x))
     end
   end
-
+  
   def do_work(pid) do
       A2.gossipStep(pid)
       do_work(pid)
@@ -20,28 +20,39 @@ defmodule A2 do
       GenServer.cast(pid,:push_sum_step)
   end
 
-  def buildTopology(topology, num_nodes) do
-      case topology do
-          line    -> 
-            actors = Line.spawn_actors(num_nodes, self())
-            Line.set_peers(:line, actors)
+
+  def buildTopology(topology, num_nodes, algorithm) do
+    main_pid = self()
+    case topology do
+        "line"    -> 
+            actors = Line.spawn_actors(num_nodes, main_pid )
+            Line.set_peers(actors)
             actors
           
-          impline -> 
-            actors = Line.spawn_actors(num_nodes, self())
-            Line.set_peers(:line, actors, true)
+        "impline" -> 
+            actors_map = Line.spawn_actors(num_nodes, main_pid)
+            Line.set_peers(actors_map, true)
          
-          grid    -> 
-            actors = Grid.spawn_actors(num_nodes)
-            Grid.set_peers(:grid, actors)
+        "grid"    -> 
+            actors = Grid.spawn_actors(num_nodes, main_pid, algorithm)
+            Grid.set_peers(actors)
+            IO.puts "peers set"
 
-          _    -> IO.puts("not yet implemented")
+        "3D"      ->
+            actors = ThreeDimGrid.spawn_actors(num_nodes, main_pid)
+            ThreeDimGrid.set_peers(actors)
+
+        "full"    ->
+            actors = Full.spawn_actors(num_nodes, main_pid)
+            Full.set_peers(actors)
+
+        _  -> IO.puts("not yet implemented")
       end
   end 
 
-  def start_up(num_nodes, topology) do
+  def start_up(num_nodes, topology, algorithm) do
     #build topology
-    actors = buildTopology(topology, num_nodes)
+    actors = buildTopology(topology, num_nodes, algorithm)
     #spin up the main actor
     {status,mainActor} = A2.start_link({0,[]})
     #put all other actors in its mailbox 

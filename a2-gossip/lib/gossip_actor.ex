@@ -14,6 +14,12 @@ defmodule GossipActor do
     GenServer.cast(pid, {:push, item})
   end
 
+  def add_peers(pid, pidList) do
+    for x <- 0..Enum.count(pidList)-1 do
+      add_peer(pid, Enum.at(pidList,x))
+    end
+  end
+
   def gossip(pid) do
     GenServer.cast(pid, :gossip)
   end
@@ -72,6 +78,9 @@ defmodule GossipActor do
     {:noreply, {count,main_pid,start_time,[item | neighbors]} }
   end
 
+
+ 
+
   # step
   def handle_cast(:step, {count,main_pid,start_time,neighbors}) do 
     if count >= 1 do
@@ -80,5 +89,6 @@ defmodule GossipActor do
     end
     {:noreply, {count,main_pid,start_time,neighbors}}
   end
+
 
 end
