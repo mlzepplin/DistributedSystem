@@ -26,6 +26,7 @@ defmodule PushSumActor do
   end
 
   def inform_main_of_hibernation(pid) do
+    IO.inspect "received hibernate from "
     GenServer.cast(pid, :hibernate)
   end
 
@@ -53,7 +54,9 @@ defmodule PushSumActor do
     self = self()
     updatedS = (recievedS + s)/2;
     updatedW = (recievedW + w)/2;
-    IO.inspect updatedS
+    #IO.inspect updatedS
+    #IO.inspect self() 
+    #IO.inspect updatedS/updatedW
     pair = {updatedS,updatedW}
     currentRatio = updatedS/updatedW
     forwardTo = Enum.random(neighbors)
@@ -67,18 +70,19 @@ defmodule PushSumActor do
           IO.inspect "limit reached"
           inform_main_of_hibernation(main_pid)
           timeToHibernation = System.monotonic_time(:millisecond) - start_time
-          IO.inspect "time to hibernation : #{ timeToHibernation}"
-          {:noreply, {updatedS,updatedW,true,currentRatio,count+1,main_pid,start_time,neighbors}}
+          #IO.inspect "time to hibernation : "
+          IO.inspect timeToHibernation
+          {:noreply, {s,w,true,currentRatio,count+1,main_pid,start_time,neighbors}}
         else
           push_sum(forwardTo,pair)
           push_sum(self,pair)
-          {:noreply, {updatedS,updatedW,hibernated,currentRatio,count+1,main_pid,start_time,neighbors}}
+          {:noreply, {s,w,hibernated,currentRatio,count+1,main_pid,start_time,neighbors}}
         end
       
       else 
         push_sum(forwardTo,pair)
         push_sum(self,pair)
-        {:noreply, {updatedS,updatedW,hibernated,currentRatio,0,main_pid,start_time,neighbors}}
+        {:noreply, {s,w,hibernated,currentRatio,0,main_pid,start_time,neighbors}}
       end
     
     end

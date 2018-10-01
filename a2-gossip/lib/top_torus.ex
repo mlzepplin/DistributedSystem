@@ -76,19 +76,8 @@ defmodule Torus do
                     "pushsum" ->
                         PushSumActor.add_peers(actor, neighbors)
                     end
-
-
-
             )end)
         )end)
 
     end
-
-
-
-
-
-
-
-
 end
