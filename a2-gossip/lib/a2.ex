@@ -45,6 +45,7 @@ defmodule A2 do
       actors = get_list_of_actors_2d(actors_map)
 
     #Torus. Similar to a 2D grid, joined at the edges
+    # terminates with 10 actors for n = 10 ?
     "sphere"  ->
       actors_map = Torus.spawn_actors(num_nodes, hibernate_actor_pid, algorithm)
       Torus.set_peers(num_nodes, actors_map, algorithm)
@@ -52,12 +53,12 @@ defmodule A2 do
 
     "3D"      ->
       actors_map = ThreeDimGrid.spawn_actors(num_nodes, hibernate_actor_pid, algorithm)
-      ThreeDimGrid.set_peers(actors_map, algorithm)
+      ThreeDimGrid.set_peers(num_nodes, actors_map, algorithm)
       actors = get_list_of_actors_3d(actors_map)
 
         
 
-        _  -> IO.puts("not yet implemented")
+     _  -> IO.puts("not yet implemented")
       end
   end 
 

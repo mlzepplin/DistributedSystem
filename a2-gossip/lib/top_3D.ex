@@ -40,7 +40,7 @@ defmodule ThreeDimGrid do
     def set_peers(num_nodes, actors_map,algorithm) do
         n = round(Float.ceil(:math.pow(num_nodes, 1/3)))
 
-        Enum.each(num_nodes, actors_map, fn({x,twoD_map}) -> (
+        Enum.each(actors_map, fn({x,twoD_map}) -> (
             Enum.each(twoD_map, fn({y,oneD_map}) -> (
                 Enum.each(oneD_map, fn({z,actor}) -> (
 
