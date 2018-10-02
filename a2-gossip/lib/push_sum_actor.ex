@@ -26,7 +26,6 @@ defmodule PushSumActor do
   end
 
   def inform_main_of_hibernation(pid) do
-    IO.inspect "received hibernate from "
     GenServer.cast(pid, :hibernate)
   end
 
@@ -36,32 +35,38 @@ defmodule PushSumActor do
   end
 
   #################### Handle_Calls #####################
-  
-  # pop
-  # def handle_call(:pop, _from, {s,w,round,main_pid,start_time,[head | tail]}) do
-  #   {:reply, head, start_time,{count,tail}}
-  # end
 
   # get_count
   def handle_call(:get_ratio, _from, {s,w,prev_ratio,count,main_pid,start_time,neighbors} ) do
     {:reply,s/w}
   end
 
+  #################### Handle_Infos #####################
+  # def handle_info(:repeat, {count,main_pid,start_time,neighbors}) do
+  #   forwardTo = Enum.random(neighbors)
+  #   push_sum(forwardTo)
+  #   #if count < @limit do
+  #   Process.send_after(self,:repeat, 100)
+  #   #end 
+  #   { :noreply, {count,main_pid,start_time,neighbors} }
+  # end
+
   #################### Handle_Casts #####################
   
   # Push Sum
   def handle_cast({:push_sum,{recievedS,recievedW}}, {s,w,hibernated,prev_ratio,count,main_pid,start_time,neighbors}) do
     self = self()
-    updatedS = (recievedS + s)/2;
-    updatedW = (recievedW + w)/2;
+    updatedS = recievedS + s;
+    updatedW = recievedW + w;
     #IO.inspect updatedS
     #IO.inspect self() 
     #IO.inspect updatedS/updatedW
-    pair = {updatedS,updatedW}
+    pair = {updatedS/2,updatedW/2}
     currentRatio = updatedS/updatedW
     forwardTo = Enum.random(neighbors)
+
     if hibernated do
-      {:noreply, {updatedS,updatedW,hibernated,currentRatio,count,main_pid,start_time,neighbors}}
+      {:noreply, {s,w,hibernated,currentRatio,count,main_pid,start_time,neighbors}}
     else 
     
       if (abs(currentRatio - prev_ratio) < :math.pow(10,-10)) do
@@ -70,24 +75,22 @@ defmodule PushSumActor do
           IO.inspect "limit reached"
           inform_main_of_hibernation(main_pid)
           timeToHibernation = System.monotonic_time(:millisecond) - start_time
-          #IO.inspect "time to hibernation : "
+          # IO.inspect "time to hibernation : "
           IO.inspect timeToHibernation
-          {:noreply, {s,w,true,currentRatio,count+1,main_pid,start_time,neighbors}}
+          {:noreply, {updatedS,updatedW,true,currentRatio,count+1,main_pid,start_time,neighbors}}
         else
           push_sum(forwardTo,pair)
           push_sum(self,pair)
-          {:noreply, {s,w,hibernated,currentRatio,count+1,main_pid,start_time,neighbors}}
+          {:noreply, {updatedS,updatedW,hibernated,currentRatio,count+1,main_pid,start_time,neighbors}}
         end
       
       else 
         push_sum(forwardTo,pair)
         push_sum(self,pair)
-        {:noreply, {s,w,hibernated,currentRatio,0,main_pid,start_time,neighbors}}
+        {:noreply, {updatedS,updatedW,hibernated,currentRatio,0,main_pid,start_time,neighbors}}
       end
     
-    end
-  
-    
+    end    
   end
 
   # push

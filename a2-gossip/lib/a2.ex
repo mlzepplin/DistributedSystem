@@ -141,7 +141,7 @@ defmodule A2 do
    if hibernationStatus == false do
     do_work(pid)
    else
-    IO.inspect "DONE BOY DONE BOY DONE BOY YES BOY YES BOY YES BOY"
+    IO.inspect "########################## DONE #############################"
    end
   end
   
