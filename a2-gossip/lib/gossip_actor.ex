@@ -1,7 +1,7 @@
 defmodule GossipActor do
   use GenServer
   @limit 10
-  @time_interval 10
+  @time_interval 1
   # Client Side
   def start_link(default) do
     GenServer.start_link(__MODULE__, default)
