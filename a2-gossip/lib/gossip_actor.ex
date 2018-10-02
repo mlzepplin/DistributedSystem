@@ -45,7 +45,7 @@ defmodule GossipActor do
     forwardTo = Enum.random(neighbors)
     GossipActor.gossip(forwardTo)
     #if count < @limit do
-    Process.send_after(self,:repeat, @time_interval)
+      Process.send_after(self,:repeat, @time_interval)
     #end 
     { :noreply, {count,main_pid,start_time,neighbors} }
   end

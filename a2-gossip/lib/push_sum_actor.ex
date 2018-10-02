@@ -1,6 +1,6 @@
 defmodule PushSumActor do
   use GenServer
-
+  @time_interval 10
   # Client Side
   def start_link(default) do
     GenServer.start_link(__MODULE__, default)
@@ -42,14 +42,16 @@ defmodule PushSumActor do
   end
 
   #################### Handle_Infos #####################
-  # def handle_info(:repeat, {count,main_pid,start_time,neighbors}) do
-  #   forwardTo = Enum.random(neighbors)
-  #   push_sum(forwardTo)
-  #   #if count < @limit do
-  #   Process.send_after(self,:repeat, 100)
-  #   #end 
-  #   { :noreply, {count,main_pid,start_time,neighbors} }
-  # end
+  def handle_info(:repeat, {s,w,hibernated,prev_ratio,count,main_pid,start_time,neighbors}) do
+    forwardTo = Enum.random(neighbors)
+    # assuming when stepping the rounds, we send out our half state
+    push_sum(forwardTo,{s/2,w/2})
+    #if count < @limit do
+    self = self()
+    Process.send_after(self,:repeat, @time_interval)
+    #end 
+    { :noreply, {s,w,hibernated,prev_ratio,count,main_pid,start_time,neighbors} }
+  end
 
   #################### Handle_Casts #####################
   
@@ -58,13 +60,12 @@ defmodule PushSumActor do
     self = self()
     updatedS = recievedS + s;
     updatedW = recievedW + w;
-    #IO.inspect updatedS
-    #IO.inspect self() 
-    #IO.inspect updatedS/updatedW
     pair = {updatedS/2,updatedW/2}
     currentRatio = updatedS/updatedW
     forwardTo = Enum.random(neighbors)
-
+    if count == 0 do
+      Process.send_after(self,:repeat, @time_interval)
+    end
     if hibernated do
       {:noreply, {s,w,hibernated,currentRatio,count,main_pid,start_time,neighbors}}
     else 
@@ -72,11 +73,9 @@ defmodule PushSumActor do
       if (abs(currentRatio - prev_ratio) < :math.pow(10,-10)) do
       
         if count==2 do
-          IO.inspect "limit reached"
           inform_main_of_hibernation(main_pid)
           timeToHibernation = System.monotonic_time(:millisecond) - start_time
-          # IO.inspect "time to hibernation : "
-          IO.inspect timeToHibernation
+          IO.inspect "time to hibernation : #{timeToHibernation} "
           {:noreply, {updatedS,updatedW,true,currentRatio,count+1,main_pid,start_time,neighbors}}
         else
           push_sum(forwardTo,pair)
