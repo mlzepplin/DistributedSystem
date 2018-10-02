@@ -85,7 +85,7 @@ defmodule A2 do
 
     #spin up the main actor
     {status,mainActor} = A2.start_link({0,[]})
-    
+
     #put all other actors in its mailbox 
     setNeighbors(mainActor,actors)
     mainActor
