@@ -52,7 +52,7 @@ defmodule A2 do
 
     "3D"      ->
       actors_map = ThreeDimGrid.spawn_actors(num_nodes, main_pid, algorithm)
-      ThreeDimGrid.set_peers(actors_map, algorithm)
+      ThreeDimGrid.set_peers(num_nodes, actors_map, algorithm)
       actors = get_list_of_actors_3d(actors_map)
 
         
@@ -85,7 +85,7 @@ defmodule A2 do
 
     #spin up the main actor
     {status,mainActor} = A2.start_link({0,[]})
-    
+
     #put all other actors in its mailbox 
     setNeighbors(mainActor,actors)
     mainActor
