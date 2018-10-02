@@ -7,10 +7,10 @@ defmodule A2 do
     end
   end
   
-  def do_work(pid) do
-      A2.gossipStep(pid)
-      do_work(pid)
-  end
+  # def do_work(pid) do
+  #     A2.gossipStep(pid)
+  #     do_work(pid)
+  # end
 
   def gossipStep(pid) do
       GenServer.cast(pid,:gossip_step)
@@ -21,38 +21,38 @@ defmodule A2 do
   end
 
 
-  def buildTopology(topology, num_nodes, algorithm) do
-    main_pid = self()
+  def buildTopology(hibernate_actor_pid,topology, num_nodes, algorithm) do
+    #main_pid = self()
     case topology do
     "line"    -> 
-      actors = Line.spawn_actors(num_nodes, main_pid, algorithm)
+      actors = Line.spawn_actors(num_nodes, hibernate_actor_pid, algorithm)
       Line.set_peers(actors, algorithm)
       actors
           
     "impline" -> 
-      actors = Line.spawn_actors(num_nodes, main_pid, algorithm)
+      actors = Line.spawn_actors(num_nodes, hibernate_actor_pid, algorithm)
       Line.set_peers(actors, algorithm, true)
       actors
          
     "full"    ->
-      actors = Full.spawn_actors(num_nodes, main_pid, algorithm)
+      actors = Full.spawn_actors(num_nodes, hibernate_actor_pid, algorithm)
       Full.set_peers(actors, algorithm)
       actors
 
     "grid"    -> 
-      actors_map = Grid.spawn_actors(num_nodes, main_pid, algorithm)
+      actors_map = Grid.spawn_actors(num_nodes, hibernate_actor_pid, algorithm)
       Grid.set_peers(num_nodes, actors_map, algorithm)
       actors = get_list_of_actors_2d(actors_map)
 
     #Torus. Similar to a 2D grid, joined at the edges
     "sphere"  ->
-      actors_map = Torus.spawn_actors(num_nodes, main_pid, algorithm)
+      actors_map = Torus.spawn_actors(num_nodes, hibernate_actor_pid, algorithm)
       Torus.set_peers(num_nodes, actors_map, algorithm)
       actors = get_list_of_actors_2d(actors_map)
 
     "3D"      ->
-      actors_map = ThreeDimGrid.spawn_actors(num_nodes, main_pid, algorithm)
-      ThreeDimGrid.set_peers(num_nodes, actors_map, algorithm)
+      actors_map = ThreeDimGrid.spawn_actors(num_nodes, hibernate_actor_pid, algorithm)
+      ThreeDimGrid.set_peers(actors_map, algorithm)
       actors = get_list_of_actors_3d(actors_map)
 
         
@@ -78,9 +78,9 @@ defmodule A2 do
 
   end
 
-  def start_up(num_nodes, topology, algorithm) do
+  def start_up(hibernate_actor_pid,num_nodes, topology, algorithm) do
     #build topology
-    actors = buildTopology(topology, num_nodes, algorithm)
+    actors = buildTopology(hibernate_actor_pid,topology, num_nodes, algorithm)
     IO.inspect actors
 
     #spin up the main actor
@@ -114,6 +114,9 @@ defmodule A2 do
       GenServer.cast(pid, {:push, item})
   end
 
+  def hibernate(pid) do
+    GenServer.cast(pid, :hibernate)
+  end
 
 
   # Server Side (callbacks)
@@ -133,6 +136,15 @@ defmodule A2 do
     {:reply,numHibernated, {numHibernated,neighbors}}
   end
 
+  def do_work(pid) do
+   hibernationStatus = HibernateStatusActor.get_hibernate_status(pid)
+   if hibernationStatus == false do
+    do_work(pid)
+   else
+    IO.inspect "########################## DONE #############################"
+   end
+  end
+  
 
   ################ Handle_casts ##########################
 
